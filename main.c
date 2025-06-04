@@ -89,9 +89,11 @@
 #include "common.h"
 #include "uart_if.h"
 #include "timer_if.h"
+#include "pitches.h"
 
 // Custom includes
 #include "utils/network_utils.h"
+#include "jsmn.h"
 
 // Includes Adafruit
 #include "Adafruit_GFX.h"
@@ -618,6 +620,15 @@ drawNewPass() {
 }
 
 
+// params for PIR sensor
+#define PIR_GPIO_PORT GPIOA2_BASE
+#define PIR_GPIO_PIN 0x80
+
+// params for buzzer
+#define TIMER_INTERVAL_RELOAD   40035 /* =(255*157) */
+#define DUTYCYCLE_GRANULARITY   157
+
+
 //*****************************************************************************
 //                 GLOBAL VARIABLES -- Start
 //*****************************************************************************
@@ -633,6 +644,114 @@ extern uVectorEntry __vector_table;
 //                 GLOBAL VARIABLES -- End: df
 //*****************************************************************************
 
+//****************************************************************************
+//
+//! Update the duty cycle of the PWM timer
+//!
+//! \param ulBase is the base address of the timer to be configured
+//! \param ulTimer is the timer to be setup (TIMER_A or  TIMER_B)
+//! \param ucLevel translates to duty cycle settings (0:255)
+//!
+//! This function
+//!    1. The specified timer is setup to operate as PWM
+//!
+//! \return None.
+//
+//****************************************************************************
+void UpdateDutyCycle(unsigned long ulBase, unsigned long ulTimer,
+                     unsigned char ucLevel)
+{
+    //
+    // Match value is updated to reflect the new duty cycle settings
+    //
+    MAP_TimerMatchSet(ulBase,ulTimer,(ucLevel*DUTYCYCLE_GRANULARITY));
+}
+//****************************************************************************
+//
+//! Setup the timer in PWM mode
+//!
+//! \param ulBase is the base address of the timer to be configured
+//! \param ulTimer is the timer to be setup (TIMER_A or  TIMER_B)
+//! \param ulConfig is the timer configuration setting
+//! \param ucInvert is to select the inversion of the output
+//!
+//! This function
+//!    1. The specified timer is setup to operate as PWM
+//!
+//! \return None.
+//
+//****************************************************************************
+void SetupTimerPWMMode(unsigned long ulBase, unsigned long ulTimer,
+                       unsigned long ulConfig, unsigned char ucInvert)
+{
+    //
+    // Set GPT - Configured Timer in PWM mode.
+    //
+    MAP_TimerConfigure(ulBase,ulConfig);
+    MAP_TimerPrescaleSet(ulBase,ulTimer,0);
+
+    //
+    // Inverting the timer output if required
+    //
+    MAP_TimerControlLevel(ulBase,ulTimer,ucInvert);
+
+    //
+    // Load value set to ~0.5 ms time period
+    //
+    MAP_TimerLoadSet(ulBase,ulTimer,TIMER_INTERVAL_RELOAD);
+
+    //
+    // Match value set so as to output level 0
+    //
+    MAP_TimerMatchSet(ulBase,ulTimer,TIMER_INTERVAL_RELOAD);
+
+}
+
+//****************************************************************************
+//
+//! Sets up the identified timers as PWM to drive the peripherals
+//!
+//! \param none
+//!
+//! This function sets up the following
+//!    1. TIMERA0 as Buzzer
+//!
+//! \return None.
+//
+//****************************************************************************
+void InitPWMModules()
+{
+    //
+    // Initialization of timers to generate PWM output
+    //
+    MAP_PRCMPeripheralClkEnable(PRCM_TIMERA0, PRCM_RUN_MODE_CLK);
+
+    //
+    // TIMERA0 as Buzzer
+    //
+    SetupTimerPWMMode(TIMERA0_BASE, TIMER_A, (TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_PWM), 1);
+    MAP_TimerEnable(TIMERA0_BASE,TIMER_A);
+}
+
+//****************************************************************************
+//
+//! Disables the timer PWMs
+//!
+//! \param none
+//!
+//! This function disables the timers used
+//!
+//! \return None.
+//
+//****************************************************************************
+void DeInitPWMModules()
+{
+    //
+    // Disable the peripherals
+    //
+    MAP_TimerDisable(TIMERA0_BASE, TIMER_A);
+    MAP_PRCMPeripheralClkDisable(PRCM_TIMERA0, PRCM_RUN_MODE_CLK);
+}
 
 //*****************************************************************************
 //
@@ -721,12 +840,15 @@ void main() {
     MAP_SysTickIntEnable();
     MAP_SysTickEnable();
 
-    // GPIO init
+    // GPIO IR init
     MAP_GPIOIntRegister(IR_GPIO_PORT, GPIOA1IntHandler);
     MAP_GPIOIntTypeSet(IR_GPIO_PORT, IR_GPIO_PIN, GPIO_BOTH_EDGES); // read ir_output
     uint64_t ulStatus = MAP_GPIOIntStatus(IR_GPIO_PORT, false);
     MAP_GPIOIntClear(IR_GPIO_PORT, ulStatus);
     MAP_GPIOIntEnable(IR_GPIO_PORT, IR_GPIO_PIN);
+
+    // PWM Buzzer init
+    InitPWMModules();
 
     // SPI init
     SPIInit();
@@ -760,11 +882,12 @@ void main() {
     // show alarm off screen
     printAlarmOffScreen();
 
-    // http get request for current shadow state
-    http_get(lRetVal);
+
 
     // main program loop
     while(1) {
+        // http get request for current shadow state
+        http_get(lRetVal);
         // this isnt actually doing anything
         if (ulsystick_delta_us) {
             // a pulse width was measured by the gpio handler
@@ -825,8 +948,10 @@ void main() {
         if (alarmState == 2) {
             MAP_UtilsDelay(1000000);
             GPIO_IF_LedOn(MCU_RED_LED_GPIO);
+            UpdateDutyCycle(TIMERA0_BASE, TIMER_A, 150);
             MAP_UtilsDelay(1000000);
             GPIO_IF_LedOff(MCU_RED_LED_GPIO);
+            UpdateDutyCycle(TIMERA0_BASE, TIMER_A, 0);
         }
         // clear any input section if SW3 is pressed
         if (GPIOPinRead(GPIOA1_BASE, 0x20) && inputMode == 1 && alarmState != 2) {
@@ -924,6 +1049,18 @@ static int http_post(int iTLSSockID, int state){
 
     UART_PRINT(acSendBuff);
 
+   /* SlVersionFull ver;
+    pConfigOpt = SL_DEVICE_GENERAL_VERSION;
+    sl_DevGet(SL_DEVICE_GENERAL_CONFIGURATION, &pConfigOpt,&pConfigLen, (unsigned char*)(&ver));
+     printf("CHIP %d\nMAC 31.%d.%d.%d.%d\nPHY %d.%d.%d.%d\nNWP
+     %d.%d.%d.%d\nROM%d\nHOST%d.%d.%d.%d\n",
+     ver.ChipFwAndPhyVersion.ChipId,
+     ver.ChipFwAndPhyVersion.FwVersion[0],ver.ChipFwAndPhyVersion.FwVersion[1],
+     ver.ChipFwAndPhyVersion.FwVersion[2],ver.ChipFwAndPhyVersion.FwVersion[3],
+     ver.ChipFwAndPhyVersion.PhyVersion[0],ver.ChipFwAndPhyVersion.PhyVersion[1],
+     ver.ChipFwAndPhyVersion.PhyVersion[2],ver.ChipFwAndPhyVersion.PhyVersion[3],
+     ver.NwpVersion[0],ver.NwpVersion[1],ver.NwpVersion[2],ver.NwpVersion[3],
+     ver.RomVersion, SL_MAJOR_VERSION_NUM, SL_MINOR_VERSION_NUM, SL_VERSION_NUM, SL_SUB_VERSION_NUM); */
 
     //
     // Send the packet to the server */
@@ -988,11 +1125,56 @@ static int http_get(int iTLSSockID){
         GPIO_IF_LedOn(MCU_RED_LED_GPIO);
            return lRetVal;
     }
-    else {
-        acRecvbuff[lRetVal+1] = '\0';
-        UART_PRINT(acRecvbuff);
-        UART_PRINT("\n\r\n\r");
-    }
 
+    acRecvbuff[lRetVal+1] = '\0';
+    UART_PRINT(acRecvbuff);
+    UART_PRINT("\n\r\n\r");
+
+    char *json_start = strstr(acRecvbuff, "\r\n\r\n");
+
+    // checks if response is a json file
+    if (!json_start) {
+        UART_PRINT("Not JSON!\n\r");
+        return -1;
+    }
+    json_start += 4; // skips past the \r\n\r\n
+
+    // parses file
+    jsmn_parser parser;
+    jsmntok_t tokens[128];
+    jsmn_init(&parser);
+
+    int tokenCount = jsmn_parse(&parser, json_start, strlen(json_start), tokens, 128);
+    if (tokenCount < 0) {
+        UART_PRINT("JSON parse failed.\n\r");
+        return -1;
+    }
+    int i;
+    for (i = 1; i < tokenCount; i++) {
+        if (tokens[i].type == JSMN_STRING &&
+            tokens[i].end - tokens[i].start == 5 &&
+            strncmp(json_start + tokens[i].start, "email", 5) == 0) {
+
+            // extracts the wanted field
+            jsmntok_t valTok = tokens[i + 1];
+            int len = valTok.end - valTok.start;
+            char emailValue[128] = {0};
+
+            if (len < sizeof(emailValue)) {
+                strncpy(emailValue, json_start + valTok.start, len);
+                emailValue[len] = '\0';
+                UART_PRINT("Set alarm: %s\n\r", emailValue);
+                if (strcmp(emailValue, "Alarm On") == 0) {
+                    alarmState = 1, inputMode = 0, print = true;
+                } else if (strcmp(emailValue, "Alarm Off") == 0) {
+                    alarmState = 0, inputMode = 0, print = true;
+                }
+            } else {
+                UART_PRINT("Alarm state not valid");
+            }
+
+            break;
+        }
+    }
     return 0;
 }
