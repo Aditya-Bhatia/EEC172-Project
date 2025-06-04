@@ -3,7 +3,7 @@
 ## Pinout
 
 ### Speaker
-Pin 29 or 30 (PWM)
+Pin 17 (PWM)
 
 ### Optical Fingerprint Sensor
 Pins 1 (UART1 TX), 2 (UART1 RX)
