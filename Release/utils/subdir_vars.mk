@@ -5,22 +5,22 @@
 SHELL = cmd.exe
 
 # Add inputs and outputs from these tool invocations to the build variables 
-C_SRCS += \
-../utils/network_utils.c 
-
-C_DEPS += \
-./utils/network_utils.d 
+CPP_SRCS += \
+../utils/network_utils.cpp 
 
 OBJS += \
 ./utils/network_utils.obj 
 
+CPP_DEPS += \
+./utils/network_utils.d 
+
 OBJS__QUOTED += \
 "utils\network_utils.obj" 
 
-C_DEPS__QUOTED += \
+CPP_DEPS__QUOTED += \
 "utils\network_utils.d" 
 
-C_SRCS__QUOTED += \
-"../utils/network_utils.c" 
+CPP_SRCS__QUOTED += \
+"../utils/network_utils.cpp" 
 
 

@@ -10,6 +10,7 @@ GEN_OPTS__FLAG :=
 GEN_CMDS__FLAG := 
 
 ORDERED_OBJS += \
+"./Adafruit_Fingerprint.obj" \
 "./Adafruit_GFX.obj" \
 "./Adafruit_OLED.obj" \
 "./gpio_if.obj" \
@@ -134,20 +135,20 @@ endif
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXE_OUTPUTS += \
-aws-rest-api-ssl-demo.out \
+final-proj-security-system.out \
 
 EXE_OUTPUTS__QUOTED += \
-"aws-rest-api-ssl-demo.out" \
+"final-proj-security-system.out" \
 
 
 # All Target
-all: aws-rest-api-ssl-demo.out
+all: final-proj-security-system.out
 
 # Tool invocations
-aws-rest-api-ssl-demo.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
+final-proj-security-system.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: Arm Linker'
-	"C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=none -me -Ooff --define=ccs --define=cc3200 -g --gcc --printf_support=full --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi -z -m"aws-rest-api-ssl-demo.map" --heap_size=0x00008000 --stack_size=0x00001000 -i"C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/lib" -i"C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="aws-rest-api-ssl-demo_linkInfo.xml" --rom_model -o "aws-rest-api-ssl-demo.out" $(ORDERED_OBJS)
+	"C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/bin/armcl" -mv7M4 --code_state=16 --float_support=none -me -Ooff --define=ccs --define=cc3200 -g --gcc --printf_support=full --diag_warning=225 --diag_wrap=off --display_error_number --abi=eabi -z -m"final-proj-security-system.map" --heap_size=0x00008000 --stack_size=0x00001000 -i"C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/lib" -i"C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include" --reread_libs --diag_wrap=off --display_error_number --warn_sections --xml_link_info="final-proj-security-system_linkInfo.xml" --rom_model -o "final-proj-security-system.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 	@$(MAKE) --no-print-directory post-build
@@ -155,14 +156,15 @@ aws-rest-api-ssl-demo.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "Adafruit_GFX.obj" "Adafruit_OLED.obj" "gpio_if.obj" "main.obj" "network_common.obj" "oled_test.obj" "pinmux.obj" "startup_ccs.obj" "timer_if.obj" "uart_if.obj" "utils\network_utils.obj" 
-	-$(RM) "Adafruit_GFX.d" "Adafruit_OLED.d" "gpio_if.d" "main.d" "network_common.d" "oled_test.d" "pinmux.d" "startup_ccs.d" "timer_if.d" "uart_if.d" "utils\network_utils.d" 
+	-$(RM) "Adafruit_Fingerprint.obj" "Adafruit_GFX.obj" "Adafruit_OLED.obj" "gpio_if.obj" "main.obj" "network_common.obj" "oled_test.obj" "pinmux.obj" "startup_ccs.obj" "timer_if.obj" "uart_if.obj" "utils\network_utils.obj" 
+	-$(RM) "gpio_if.d" "network_common.d" "oled_test.d" "startup_ccs.d" "timer_if.d" "uart_if.d" 
+	-$(RM) "Adafruit_Fingerprint.d" "Adafruit_GFX.d" "Adafruit_OLED.d" "main.d" "pinmux.d" "utils\network_utils.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 
 post-build:
 	-@echo 'Bin Generation'
-	-"C:/ti/ccs1250/ccs/utils/tiobj2bin/tiobj2bin" "aws-rest-api-ssl-demo.out" "aws-rest-api-ssl-demo.bin" "C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/bin/armofd" "C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/bin/armhex" "C:/ti/ccs1250/ccs/utils/tiobj2bin/mkhex4bin"
+	-"C:/ti/ccs1250/ccs/utils/tiobj2bin/tiobj2bin" "final-proj-security-system.out" "final-proj-security-system.bin" "C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/bin/armofd" "C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/bin/armhex" "C:/ti/ccs1250/ccs/utils/tiobj2bin/mkhex4bin"
 	-@echo ' '
 
 .PHONY: all clean dependents

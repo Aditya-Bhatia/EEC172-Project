@@ -1,6 +1,10 @@
 # FIXED
 
-Adafruit_OLED.obj: ../Adafruit_OLED.c
+Adafruit_OLED.obj: ../Adafruit_OLED.cpp
+Adafruit_OLED.obj: C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/libcxx/string.h
+Adafruit_OLED.obj: C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/libcxx/__config
+Adafruit_OLED.obj: C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/libcxx/__config_site
+Adafruit_OLED.obj: C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/libcxx/__libcxx_extra.h
 Adafruit_OLED.obj: C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/string.h
 Adafruit_OLED.obj: C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/_ti_config.h
 Adafruit_OLED.obj: C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/linkage.h
@@ -23,7 +27,15 @@ Adafruit_OLED.obj: C:/ti/CC3200SDK_1.5.0/cc3200-sdk/example/common/uart_if.h
 Adafruit_OLED.obj: ../pinmux.h
 Adafruit_OLED.obj: ../Adafruit_SSD1351.h
 
-../Adafruit_OLED.c:
+../Adafruit_OLED.cpp:
+
+C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/libcxx/string.h:
+
+C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/libcxx/__config:
+
+C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/libcxx/__config_site:
+
+C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/libcxx/__libcxx_extra.h:
 
 C:/ti/ccs1250/ccs/tools/compiler/ti-cgt-arm_20.2.7.LTS/include/string.h:
 
