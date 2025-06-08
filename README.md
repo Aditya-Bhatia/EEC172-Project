@@ -12,7 +12,7 @@ Pins 1 (UART1 TX), 2 (UART1 RX)
 Pins 15 (OC), 18 (RST), 53 (DC), 8 (CS), 5 (CLK), 6 (MISO), 7 (MOSI)
 
 ### PIR Sensor
-Pin 16 (Data)
+Pin 62 (Data)
 
 ### IR Receiver
 Pin 3 (Data)
